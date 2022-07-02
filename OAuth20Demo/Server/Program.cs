@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using OAuth20Demo.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<OAuth20ParamModel>(builder.Configuration.GetSection("OAuth20"));
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

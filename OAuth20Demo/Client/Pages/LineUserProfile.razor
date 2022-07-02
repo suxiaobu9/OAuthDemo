@@ -1,0 +1,64 @@
+﻿@page "/LineUserProfile"
+@using OAuth20Demo.Shared;
+@using Blazored.LocalStorage;
+
+@inject HttpClient httpClient
+@inject ILocalStorageService localStorageService
+@inject NavigationManager uriHelper
+
+<div class="d-flex flex-column">
+    <div>
+        @userProfile?.name
+    </div>
+    <div>
+        @userProfile?.email
+    </div>
+    <div>
+        <img src="@userProfile?.picture" style="max-height:300px" />
+    </div>
+    <div class="mt-2">
+        <button class="btn btn-warning" @onclick="LogoutAsync">登出</button>
+    </div>
+</div>
+
+
+@code {
+
+    private LineUserProfileModel? userProfile { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var lineTokenModel = await localStorageService.GetItemAsync<LineTokenModel>("LineToken");
+
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {lineTokenModel.id_token}");
+
+        var response = await httpClient.GetAsync("Line/GetUserProfile");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            uriHelper.NavigateTo("", true);
+            return;
+        }
+
+        userProfile = await response.Content.ReadFromJsonAsync<LineUserProfileModel>();
+    }
+
+    private async Task LogoutAsync()
+    {
+        var token = await localStorageService.GetItemAsync<LineTokenModel>("LineToken");
+        var dic = new Dictionary<string, string>
+        {
+            {"accessToken", token.access_token??"" }
+        };
+
+        var response = await httpClient.PostAsync("Line/Logout", new FormUrlEncodedContent(dic));
+
+        if (response.IsSuccessStatusCode)
+        {
+
+            await localStorageService.RemoveItemsAsync(new string[] { "LineState", "LineToken" });
+
+            uriHelper.NavigateTo("", true);
+        }
+    }
+}

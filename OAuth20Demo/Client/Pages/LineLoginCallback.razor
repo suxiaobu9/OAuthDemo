@@ -1,0 +1,44 @@
+﻿@page "/LineLoginCallback"
+@using Blazored.LocalStorage;
+
+@inject ILocalStorageService localStorageService
+@inject NavigationManager uriHelper
+@inject HttpClient httpClient
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "state")]
+    public string? State { get; set; }
+
+    public string? Token { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await localStorageService.GetItemAsStringAsync("LineState") != State)
+        {
+            uriHelper.NavigateTo("", true);
+            return;
+        }
+
+        var response = await httpClient.GetAsync($"/Line/GetToken?code={Code ?? ""}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            uriHelper.NavigateTo("", true);
+            return;
+        }
+
+        Token = await response.Content.ReadAsStringAsync();
+
+        await localStorageService.SetItemAsStringAsync("LineToken", Token);
+        
+        uriHelper.NavigateTo("LineUserProfile", true);
+
+    }
+
+}
