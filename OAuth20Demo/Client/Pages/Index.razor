@@ -12,12 +12,13 @@
 
 @code {
     private string LineLoginUrl => $"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id={LineClientId}&redirect_uri={LineCallBack}&state={State}&scope=profile%20openid%20email";
-    private string GoogleLoginUrl => $"https://accounts.google.com/o/oauth2/v2/auth?client_id={GoogleClientId}&redirect_uri={GoogleCallBack}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
+    private string GoogleLoginUrl => $"https://accounts.google.com/o/oauth2/v2/auth?client_id={GoogleClientId}&redirect_uri={GoogleCallBack}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid";
     private string? LineClientId { get; set; }
     private string? LineCallBack { get; set; }
     private string? State { get; set; }
     private string? GoogleClientId { get; set; }
     private string? GoogleCallBack { get; set; }
+
 
 
     protected override async Task OnInitializedAsync()

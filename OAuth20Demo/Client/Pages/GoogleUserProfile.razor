@@ -7,6 +7,15 @@
 @inject NavigationManager uriHelper
 
 <div class="d-flex flex-column">
+    <div >
+        @UserInfo?.name
+    </div>
+    <div >
+        @UserInfo?.email
+    </div>
+    <div >
+        <img src="@UserInfo?.picture" />
+    </div>
     <div class="mt-2">
         <button class="btn btn-warning" @onclick="LogoutAsync">登出</button>
     </div>
@@ -14,19 +23,19 @@
 
 @code {
 
+    private GoogleUserInfo? UserInfo { get; set; }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return base.OnInitializedAsync();
+        UserInfo = await localStorageService.GetItemAsync<GoogleUserInfo>("GoogleToken");
+
     }
 
     private async Task LogoutAsync()
     {
-        var token = await localStorageService.GetItemAsync<GoogleTokenModel>("GoogleToken");
-
         var dic = new Dictionary<string, string>
         {
-            { "accessToken",token.access_token??""}
+            { "accessToken",UserInfo?.access_token??""}
         };
 
         var response = await httpClient.PostAsync("Google/Logout", new FormUrlEncodedContent(dic));

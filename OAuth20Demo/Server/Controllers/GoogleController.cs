@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OAuth20Demo.Shared;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace OAuth20Demo.Server.Controllers;
 
@@ -36,7 +37,21 @@ public class GoogleController : Controller
         if (!response.IsSuccessStatusCode)
             return Unauthorized();
 
-        return Ok(await response.Content.ReadFromJsonAsync<GoogleTokenModel>());
+        var data = await response.Content.ReadFromJsonAsync<GoogleTokenModel>();
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(data?.id_token);
+
+        var name = jwt.Claims.FirstOrDefault(x => x.Type == "name")?.Value;
+        var email = jwt.Claims.FirstOrDefault(x => x.Type == "email")?.Value;
+        var picture = jwt.Claims.FirstOrDefault(x => x.Type == "picture")?.Value;
+
+        return Ok(new GoogleUserInfo
+        {
+            access_token = data?.access_token,
+            email = email,
+            name = name,
+            picture = picture
+        });
     }
 
 
@@ -48,7 +63,7 @@ public class GoogleController : Controller
         if (!response.IsSuccessStatusCode)
             return Unauthorized();
 
-        return Ok(await response.Content.ReadFromJsonAsync<GoogleTokenModel>());
+        return Ok();
     }
 
 }
