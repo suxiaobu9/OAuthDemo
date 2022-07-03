@@ -29,4 +29,28 @@ public class OAuth20ParamsController : ControllerBase
     {
         return oAuth20ParamModel.LineCallBack;
     }
+
+    [HttpGet("GetLineNotifyClientId")]
+    public string? GetLineNotifyClientId()
+    {
+        return oAuth20ParamModel.LineNotifyClientId;
+    }
+
+    [HttpGet("GetLineNotifyCallBack")]
+    public string? GetLineNotifyCallBack()
+    {
+        return oAuth20ParamModel.LineNotifyCallBack;
+    }
+
+    [HttpGet("GetGoogleClientId")]
+    public string? GetGoogleClientId()
+    {
+        return oAuth20ParamModel.GoogleOAuthClientId;
+    }
+
+    [HttpGet("GetGoogleCallBack")]
+    public string? GetGoogleCallBack()
+    {
+        return oAuth20ParamModel.GoogleCallBack;
+    }
 }

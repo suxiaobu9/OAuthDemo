@@ -8,6 +8,16 @@
 
 <div class="d-flex flex-column">
     <div>
+        @if (NotifyToken == null)
+        {
+            <a href="@LineNotifyUrl" class="btn btn-success">Line Notify</a>
+        }
+        else
+        {
+            <button @onclick="RevokeNotifyAsync" class="btn btn-success">解除 Notify 連結</button>
+        }
+    </div>
+    <div>
         @userProfile?.name
     </div>
     <div>
@@ -19,12 +29,28 @@
     <div class="mt-2">
         <button class="btn btn-warning" @onclick="LogoutAsync">登出</button>
     </div>
+    @if (NotifyToken != null)
+    {
+        <div class="mt-2">
+            <textarea @bind="Message"></textarea>
+        </div>
+        <div>
+            <button class="btn btn-success" @onclick="SendMessageAsync">送出訊息</button>
+        </div>
+    }
 </div>
 
 
 @code {
 
+    private string? Message { get; set; }
     private LineUserProfileModel? userProfile { get; set; }
+    private string LineNotifyUrl => $"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={LineNotifyClientId}&redirect_uri={LineNotifyCallBack}&scope=notify&state=notify";
+
+    private string? LineNotifyClientId { get; set; }
+    private string? LineNotifyCallBack { get; set; }
+
+    private LineNotifyTokenModel? NotifyToken { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,6 +67,16 @@
         }
 
         userProfile = await response.Content.ReadFromJsonAsync<LineUserProfileModel>();
+
+        var lineNotifyClientIdResponse = await httpClient.GetAsync("/OAuth20Params/GetLineNotifyClientId");
+        LineNotifyClientId = await lineNotifyClientIdResponse.Content.ReadAsStringAsync();
+        var lineNotifyCallBackResponse = await httpClient.GetAsync("/OAuth20Params/GetLineNotifyCallBack");
+        LineNotifyCallBack = await lineNotifyCallBackResponse.Content.ReadAsStringAsync();
+
+        if (await localStorageService.ContainKeyAsync("NotifyToken"))
+        {
+            NotifyToken = await localStorageService.GetItemAsync<LineNotifyTokenModel>("NotifyToken");
+        }
     }
 
     private async Task LogoutAsync()
@@ -60,5 +96,52 @@
 
             uriHelper.NavigateTo("", true);
         }
+    }
+
+    private async Task RevokeNotifyAsync()
+    {
+        var dic = new Dictionary<string, string>
+        {
+
+            { "accessToken" , NotifyToken?.access_token??""}
+        };
+
+        var response = await httpClient.PostAsync("Line/RevokeNotify", new FormUrlEncodedContent(dic));
+
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        NotifyToken = null;
+
+        await localStorageService.RemoveItemAsync("NotifyToken");
+
+        //using var cusHttpClient = new HttpClient();
+
+        //cusHttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {NotifyToken?.access_token}");
+
+        //var response = await cusHttpClient.PostAsync("https://notify-api.line.me/api/revoke", null);
+
+        //if (!response.IsSuccessStatusCode)
+        //    NotifyToken = null;
+
+    }
+
+    private async Task SendMessageAsync()
+    {
+
+        var dic = new Dictionary<string, string>
+        {
+
+            { "accessToken" , NotifyToken?.access_token??""},
+            { "message" , Message??""},
+
+        };
+
+        var response = await httpClient.PostAsync("Line/Notify", new FormUrlEncodedContent(dic));
+
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        Message = "";
     }
 }

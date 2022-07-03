@@ -19,11 +19,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (await localStorageService.GetItemAsStringAsync("LineState") != State)
-        {
-            uriHelper.NavigateTo("", true);
-            return;
-        }
+        //if (await localStorageService.GetItemAsStringAsync("LineState") != State)
+        //{
+        //    uriHelper.NavigateTo("", true);
+        //    return;
+        //}
 
         var response = await httpClient.GetAsync($"/Line/GetToken?code={Code ?? ""}");
 

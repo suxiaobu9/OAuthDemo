@@ -1,0 +1,34 @@
+﻿@page "/GoogleLoginCallBack"
+@using Blazored.LocalStorage;
+
+@inject ILocalStorageService localStorageService
+@inject NavigationManager uriHelper
+@inject HttpClient httpClient
+@Code
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dic = new Dictionary<string, string>
+        {
+            { "code",Code??""}
+        };
+
+        var response = await httpClient.PostAsync("Google/GetToken", new FormUrlEncodedContent(dic));
+
+        if (!response.IsSuccessStatusCode)
+        {
+            uriHelper.NavigateTo("", true);
+            return;
+        }
+
+        await localStorageService.SetItemAsStringAsync("GoogleToken", await response.Content.ReadAsStringAsync());
+
+        uriHelper.NavigateTo("GoogleUserProfile", true);
+    }
+
+}

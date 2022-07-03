@@ -5,24 +5,33 @@
 @inject ILocalStorageService LocalStorageService
 
 <a href="@LineLoginUrl" class="btn btn-success">Line Login</a>
+<br />
+<a href="@GoogleLoginUrl" class="btn btn-primary mt-4">Google Login</a>
 
 
 
 @code {
     private string LineLoginUrl => $"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id={LineClientId}&redirect_uri={LineCallBack}&state={State}&scope=profile%20openid%20email";
+    private string GoogleLoginUrl => $"https://accounts.google.com/o/oauth2/v2/auth?client_id={GoogleClientId}&redirect_uri={GoogleCallBack}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
     private string? LineClientId { get; set; }
     private string? LineCallBack { get; set; }
     private string? State { get; set; }
+    private string? GoogleClientId { get; set; }
+    private string? GoogleCallBack { get; set; }
 
 
     protected override async Task OnInitializedAsync()
     {
         var lineClientIdResponse = await httpClient.GetAsync("/OAuth20Params/GetLineClientId");
-
-        if (lineClientIdResponse.IsSuccessStatusCode)
-            LineClientId = await lineClientIdResponse.Content.ReadAsStringAsync();
+        LineClientId = await lineClientIdResponse.Content.ReadAsStringAsync();
         var lineCallBackResponse = await httpClient.GetAsync("/OAuth20Params/GetLineCallBack");
         LineCallBack = await lineCallBackResponse.Content.ReadAsStringAsync();
+        
+        var googleClientIdResponse = await httpClient.GetAsync("/OAuth20Params/GetGoogleClientId?v=1");
+        GoogleClientId = await googleClientIdResponse.Content.ReadAsStringAsync();
+        var googleCallBackResponse = await httpClient.GetAsync("/OAuth20Params/GetGoogleCallBack?v=1");
+        GoogleCallBack = await googleCallBackResponse.Content.ReadAsStringAsync();
+        
         SetState();
     }
 

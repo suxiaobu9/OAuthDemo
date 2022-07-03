@@ -40,7 +40,7 @@ public class LineController : Controller
 
 
     [HttpGet("GetUserProfile")]
-    public async Task<IActionResult> GetUserProfile()
+    public async Task<IActionResult> GetUserProfileAsync()
     {
         var authorization = HttpContext.Request.Headers["Authorization"];
 
@@ -64,7 +64,7 @@ public class LineController : Controller
     }
 
     [HttpPost("Logout")]
-    public async Task<IActionResult> LogoutAsync([FromForm]string accessToken)
+    public async Task<IActionResult> LogoutAsync([FromForm] string accessToken)
     {
         var dic = new Dictionary<string, string>
         {
@@ -81,5 +81,54 @@ public class LineController : Controller
         return Ok();
     }
 
+    [HttpPost("GetNotifyToken")]
+    public async Task<IActionResult> GetNotifyTokenAsync([FromForm] string code)
+    {
+        var dic = new Dictionary<string, string>
+        {
+            { "grant_type","authorization_code"},
+            { "code",code},
+            { "redirect_uri",oAuth20ParamModel.LineNotifyCallBack??""},
+            { "client_id",oAuth20ParamModel.LineNotifyClientId??""},
+            { "client_secret",oAuth20ParamModel.LineNotifyClientSecret??""}
+        };
 
+        var response = await httpClient.PostAsync("https://notify-bot.line.me/oauth/token", new FormUrlEncodedContent(dic));
+
+        if (!response.IsSuccessStatusCode)
+            return Unauthorized();
+
+
+        return Ok(await response.Content.ReadAsStringAsync());
+    }
+
+    [HttpPost("RevokeNotify")]
+    public async Task<IActionResult> RevokeNotifyAsync([FromForm] string accessToken)
+    {
+
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+        var response = await httpClient.PostAsync("https://notify-api.line.me/api/revoke", null);
+
+        if (!response.IsSuccessStatusCode)
+            return Unauthorized();
+
+        return Ok();
+    }
+
+    [HttpPost("Notify")]
+    public async Task<IActionResult> NotifyAsync([FromForm]string accessToken, [FromForm]string message)
+    {
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+        var dic = new Dictionary<string, string>
+        {
+            { "message",message}
+        };
+
+        var response = await httpClient.PostAsync("https://notify-api.line.me/api/notify", new FormUrlEncodedContent(dic)); ;
+
+        return Ok();
+
+    }
 }

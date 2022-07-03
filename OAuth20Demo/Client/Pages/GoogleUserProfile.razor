@@ -1,0 +1,40 @@
+﻿@page "/GoogleUserProfile"
+@using Blazored.LocalStorage;
+@using OAuth20Demo.Shared;
+
+@inject HttpClient httpClient
+@inject ILocalStorageService localStorageService
+@inject NavigationManager uriHelper
+
+<div class="d-flex flex-column">
+    <div class="mt-2">
+        <button class="btn btn-warning" @onclick="LogoutAsync">登出</button>
+    </div>
+</div>
+
+@code {
+
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private async Task LogoutAsync()
+    {
+        var token = await localStorageService.GetItemAsync<GoogleTokenModel>("GoogleToken");
+
+        var dic = new Dictionary<string, string>
+        {
+            { "accessToken",token.access_token??""}
+        };
+
+        var response = await httpClient.PostAsync("Google/Logout", new FormUrlEncodedContent(dic));
+
+        if (response.IsSuccessStatusCode)
+        {
+            await localStorageService.RemoveItemAsync("GoogleToken");
+            uriHelper.NavigateTo("", true);
+        }
+    }
+}

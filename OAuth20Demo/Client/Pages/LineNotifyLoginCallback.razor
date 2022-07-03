@@ -1,0 +1,34 @@
+﻿@page "/LineNotifyLoginCallback"
+
+@using Blazored.LocalStorage;
+
+@inject ILocalStorageService localStorageService
+@inject NavigationManager uriHelper
+@inject HttpClient httpClient
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "state")]
+    public string? State { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dic = new Dictionary<string, string>
+        {
+            { "code",Code??""}
+        };
+        var response = await httpClient.PostAsync("/Line/GetNotifyToken", new FormUrlEncodedContent(dic));
+
+        var accessToken = await response.Content.ReadAsStringAsync();
+
+        await localStorageService.SetItemAsStringAsync("NotifyToken", accessToken);
+
+        uriHelper.NavigateTo("LineUserProfile", true);
+
+    }
+}
